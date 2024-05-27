@@ -24,31 +24,41 @@ class AlienInvasion:
         self.create_fleet()
 
     def update_aliens(self):
+        # вызов функции проверки границ
         self.check_fleet_edges()
+        # вызов функции обновления пришельцев
         self.aliens.update()
 
     def update_bullets(self):
+        # вызов функции обновления пуль
         self.bullets.update()
+        # удаление пуль
         for bullet in self.bullets.copy():
             if bullet.rect.bottom <= 0:
                 self.bullets.remove(bullet)
+        # удаление снаряда и пришельца
         collisions = pygame.sprite.groupcollide(self.bullets, self.aliens, False, True)
+        # восстановление флота пришельцев
         if not self.aliens:
             self.bullets.empty()
             self.create_fleet()
 
     def check_fleet_edges(self):
+        # проверка границ
         for alien in self.aliens.sprites():
             if alien.check_edges():
+                # изменение направления
                 self.change_fleet_direction()
                 break
 
     def change_fleet_direction(self):
+        # изменение направления пришельцев
         for alien in self.aliens.sprites():
             alien.rect.y += self.settings.fleet_drop_speed
         self.settings.fleet_direction *= -1
 
     def screen_update(self):
+        # обновление экрана
         self.screen.fill(self.settings.bg_color)
         self.ship.blitme()
         for bullet in self.bullets.sprites():
@@ -56,7 +66,9 @@ class AlienInvasion:
         self.aliens.draw(self.screen)
         pygame.display.flip()
 
+    # функция добавления флота
     def create_fleet(self):
+        # создание экземпляра класса пришельцев
         alien = Alien(self)
         alien_width, alien_height = alien.rect.size
         available_space_x = self.settings.W - (2 * alien_width)
@@ -71,6 +83,7 @@ class AlienInvasion:
             for alien_number in range(number_aliens_x):
                 self.create_alien(alien_number, row_number)
 
+    # функция добавления пришельца
     def create_alien(self, alien_number, row_number):
         alien = Alien(self)
         alien_width, alien_height = alien.rect.size
@@ -118,6 +131,7 @@ class AlienInvasion:
             # self.create_fleet()
 
             def fire_bullet(self):
+                # вылет снаряда
                 if len(self.bullets) < self.settings.bullets_allowed:
                     new_bullet = Bullet(self)
                     self.bullets.add(new_bullet)

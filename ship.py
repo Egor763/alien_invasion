@@ -15,9 +15,11 @@ class Ship:
 
         # флаг перемещения
         self.moving_right = False
+
         self.moving_left = False
 
     def update(self):
+        # обновление корабля
         if self.moving_right and self.rect.right < self.screen_rect.right:
             self.x += self.settings.ship_speed
 
@@ -27,4 +29,5 @@ class Ship:
         self.rect.x = self.x
 
     def blitme(self):
+        # отрисовка корабля
         self.screen.blit(self.image, self.rect)
