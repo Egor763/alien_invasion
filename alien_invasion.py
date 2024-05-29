@@ -57,6 +57,7 @@ class AlienInvasion:
     def ship_hit(self):
         # обрабатывает столкновение корабля с пришельцем
         if self.stats.ships_left > 0:
+            # уменьшение ships_left и обновление панели
             self.stats.ships_left -= 1
 
             # очистка списков пришельцев и снарядов
@@ -94,10 +95,15 @@ class AlienInvasion:
             self.create_fleet()
             self.settings.increase_speed()
 
+            # увлеличение уровня
+            self.stats.level += 1
+            self.sb.prep_level()
+
         if collisions:
             for aliens in collisions.values():
                 self.stats.score += self.settings.alien_points * len(aliens)
-            self.sb.prep_score()
+        self.sb.prep_score()
+        self.sb.check_high_score()
 
     def check_fleet_edges(self):
         # проверка границ
@@ -166,6 +172,8 @@ class AlienInvasion:
             self.stats.reset_stats()
             self.stats.game_active = True
             self.sb.prep_score()
+            self.sb.prep_level()
+            self.sb.prep_ships()
 
             # очистка списков пришельцев и снарядов
             self.aliens.empty()
