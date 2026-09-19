@@ -1,6 +1,9 @@
+from time import sleep
+
 import pygame
 
 from settings import Settings
+from game_stats import GameStats
 from ship import Ship
 from bullet import Bullet
 from alien import Alien
@@ -19,6 +22,8 @@ class AlienInvasion:
         self.settings.H = self.screen.get_rect().height
         pygame.display.set_caption("Инопланетное вторжение")
 
+        self.stats = GameStats()
+
         screen = self.screen
 
         self.ship = Ship(screen)
@@ -36,6 +41,7 @@ class AlienInvasion:
             self.ship.update()
 
             self._update_bullets()
+            self._update_aliens()
 
             self._update_screen()
 
@@ -86,37 +92,120 @@ class AlienInvasion:
     def _update_bullets(self):
         self.bullets.update()
 
+        # Проверка попаданий в пришельцев
+        # При обнаружении попадания удалить снаряд и пришельца
+
         for bullet in self.bullets.copy():
             if bullet.rect.bottom <= 0:
                 self.bullets.remove(bullet)
 
+            self._check_bullet_alien_collisions()
+
+    def _check_bullet_alien_collisions(self):
+        # Обработка коллизий снарядов с пришельцами
+        # Удаление снарядов и пришельцев, учавствующих в коллизиях
+        collisions = pygame.sprite.groupcollide(self.bullets, self.aliens, True, True)
+        if not self.aliens:
+            # Уничтожение существующих снарядов и восстановление флота
+            self.bullets.empty()
+            self._create_fleet()
+
+    def _update_aliens(self):
+        # Обновляет позиции всех пришельцев во флоте
+        if self._check_fleet_edges():
+            self._change_fleet_direction()
+
+        for alien in self.aliens.sprites():
+            alien.x += self.settings.alien_speed * self.settings.fleet_direction
+        self.aliens.update()
+
+        # Проверка коллизий "пришелец - корабль"
+        if pygame.sprite.spritecollideany(self.ship, self.aliens):
+            self._ship_hit()
+
+    def _check_fleet_edges(self):
+        # Реагирует на достижение пришельцем края экрана
+
+        for alien in self.aliens.sprites():
+            if alien.check_edges():
+                # self._change_fleet_direction()
+                return True
+
+        return False
+
+    def _change_fleet_direction(self):
+        # Опускает весь флот и меняет направление флота
+        self.settings.fleet_direction *= -1
+        # Опускаем весь флот вниз
+        for alien in self.aliens.sprites():
+            alien.rect.y += self.settings.fleet_drop_speed
+            # И сразу "прижимаем" к границе, чтобы не улетели
+            screen_rect = self.screen.get_rect()
+            if alien.rect.right > screen_rect.right:
+                alien.rect.right = screen_rect.right
+                alien.x = float(alien.rect.x)
+
+            elif alien.rect.left < 0:
+                alien.rect.left = 0
+                alien.x = float(alien.rect.x)
+
     def _create_fleet(self):
-        # Создание флота вторжения
-        # Создание пришельца
         alien = Alien(self.screen)
-        alien_width = alien.rect.width
+        alien_width, alien_height = alien.rect.size
+        ship_height = self.ship.rect.height
+
+        # Небольшой отступ сверху (чтобы флот не прилипал к краю экрана)
+        top_margin = 20
+
         available_space_x = self.settings.W - (2 * alien_width)
         number_aliens_x = available_space_x // (2 * alien_width)
 
-        # Определяет количество рядов, помещающихся на экране
-        # ship_height = self.ship.rect.height
-        # available_space_y = self.settings.H - (3 * alien_height) - ship_height
-        # number_rows = available_space_y // (2 * alien_height)
+        # Считаем свободное место: экран минус отступ сверху и место под корабль
+        available_space_y = self.settings.H - top_margin - ship_height
 
-        # Создание флота вторжения
-        # for row_number in range(number_rows):
-        # Создание первого ряда пришельцев
-        for alien_number in range(number_aliens_x):
-            self._create_alien(alien_number)
+        # Шаг между рядами: высота пришельца + небольшой зазор
+        row_step = (
+            alien_height + 10
+        )  # можно поставить 10, 15 или 20 — как больше нравится
+        number_rows = available_space_y // row_step
 
-    def _create_alien(self, alien_number):
+        print(
+            f"top_margin={top_margin}, row_step={row_step}, number_rows={number_rows}"
+        )
+
+        for row_number in range(number_rows):
+            for alien_number in range(number_aliens_x):
+                self._create_alien(alien_number, row_number)
+
+    def _create_alien(self, alien_number, row_number):
         # Создание пришельца и размещение его в ряду
         alien = Alien(self.screen)
-        alien_width = alien.rect.width
+        alien_width, alien_height = alien.rect.size
         alien.x = alien_width + 2 * alien_width * alien_number
         alien.rect.x = alien.x
-        # alien.rect.y = alien.rect.height + 2 * alien.rect.height * row_number
+
+        top_margin = 20
+        row_step = alien_height + 10
+
+        alien.y = top_margin + row_step * row_number
+        alien.rect.y = alien.y
         self.aliens.add(alien)
+
+    def _ship_hit(self):
+        # Обрабатывает столкновение корабля с пришельцем
+        # Уменьшение ships_left
+        self.stats.ships_left -= 1
+
+        # Очистка списков пришельцев и снарядов
+        self.aliens.empty()
+        self.bullets.empty()
+
+        # Создание нового флота и размещение корабля в центре
+        self._create_fleet()
+        self.ship.center_ship()
+
+        # Пауза
+        sleep(0.5)
 
     def _update_screen(self):
         self.screen.fill(self.settings.bg_color)
