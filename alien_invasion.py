@@ -242,6 +242,7 @@ class AlienInvasion:
 
         else:
             self.game_active = False
+            pygame.mouse.set_visible(True)
 
     def _check_aliens_bottom(self):
         # Проверяет, добрались ли пришельцы до нижнего края экрана
