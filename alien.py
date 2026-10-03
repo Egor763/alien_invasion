@@ -19,7 +19,6 @@ class Alien(Sprite):
 
         # Каждый новый пришелец появляется в левом верхнем углу экрана
         self.rect.x = self.rect.width
-        # self.rect.y = self.rect.height
 
         # Сохранение точной горизонтальной позиции пришельца
         self.x = float(self.rect.x)
@@ -34,5 +33,4 @@ class Alien(Sprite):
 
     def update(self):
         # Перемещает пришельца вправо
-        # self.x += self.settings.alien_speed * self.settings.fleet_direction
         self.rect.x = self.x
