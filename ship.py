@@ -1,11 +1,14 @@
 import pygame
+from pygame.sprite import Sprite
+
 
 from settings import Settings
 
 
-class Ship:
+class Ship(Sprite):
     # Класс для управления корабля
     def __init__(self, screen):
+        super().__init__()
         self.screen = screen
         # Инициализирует корабль и задает его начальную позицию
         self.screen_rect = self.screen.get_rect()

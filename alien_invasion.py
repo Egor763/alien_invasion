@@ -37,6 +37,14 @@ class AlienInvasion:
 
         self.play_button = Button(self.screen, "Play")
 
+        self.gunshot_sound = pygame.mixer.Sound("sounds/gunshot_sound.wav")
+
+        self.gunshot_sound.set_volume(0.1)
+
+        self.explosion_sound = pygame.mixer.Sound("sounds/explosion_sound.wav")
+
+        self.explosion_sound.set_volume(0.1)
+
     def run_game(self):
         # Запуск основного цикла игры
         while True:
@@ -74,7 +82,6 @@ class AlienInvasion:
         # Универсальный метод для безопасного запуска новой игры
         self.stats.reset_stats()
         self.sb.prep_score()
-        self.sb.prep_level()
 
         self.aliens.empty()
         self.bullets.empty()
@@ -104,6 +111,7 @@ class AlienInvasion:
 
             elif event.key == pygame.K_SPACE:
                 self._fire_bullet()
+                self.gunshot_sound.play()
 
         elif not self.stats.game_active:
             if event.key == pygame.K_p:
@@ -157,18 +165,13 @@ class AlienInvasion:
                 self.stats.score += self.settings.alien_points * len(aliens)
             self.sb.prep_score()
             self.sb.check_high_score()
+            self.explosion_sound.play()
 
         if not self.aliens:
             # Уничтожение существующих снарядов и восстановление флота
             self.bullets.empty()
             self._create_fleet()
             self.settings.increase_speed()
-
-            # # Увеличение уровня
-            # self.stats.level += 1
-            # self.sb.prep_level()
-
-            # print(f"уровень: {self.stats.level}")
 
     def _update_aliens(self):
         # Обновляет позиции всех пришельцев во флоте
